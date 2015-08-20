@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/doodoros/rosbuild_ws/sandbox/simple_navigation_goals2/build/devel/setup.sh

@@ -1,0 +1,46 @@
+This is a documentation on how I got the modified segway100rmp up and running inside ROS Hydro on Ubuntu 12.04 LTS.
+
+The segbot and segbot_apps package in ROS by Piyush Khandelwal was used. This package contains mostly everything I needed to drive the segbot, some parameters had to be changed.
+
+$sudo apt-get install ros-hydro-segbot
+$sudo apt-get install ros-hydro-segbot-apps
+
+The segway100rmp only uses hokuyo for navigation, the segbot default one uses both hokuyo and kinect. 
+
+Driver and Launch changes::
+
+My hokuyo device is "ttyACM0", the default one in segbot is "hokuyo".
+	Changes: in $(find segbot_sensors) the launch file hokuyo.launch, changed the parameter port to /dev/ttyACM0
+
+The modified segway100rmp has a much different odometry from the default segbot one, which is based on segway50rmp. Using the odometry tests specified in ROS navigation tuning wiki, I adjusted the odometry numbers to fit the robot.
+	Changes: in $(find segbot_bringup) the launch file segway_base.launch, changed the parameters linear_odom_scale and angular_odom_scale both to 0.9
+
+The default segbot setup had it's hokuyo upside down, I wanted the hokuyo to be right side up on our robot. So I adjusted the tf of the robot a bit to rotate the hokuyo. NOTE: Since the size of the rmp100 and rmp50 are fairly close, I did not change the other tfs to match the modified segway100rmp robot, the tf of the hokuyo sensor is a bit off from the actual placing, but in testing practice, it didn't really matter.
+	tf info(in case for future changes): the tree root is located in $(find segbot_description)/robots/segbot_hokuyo.urdf.xacro for the segbot_hokuyo.launch launch file. X axis is robot forward, z axis is robot up. The tree is composed of a bunch of urdf files, very difficult to navigate and change or fine tune. 
+	Changes: In $(find segbot_description)/urdf/mounts/hokuyo_mount.urdf.xacro, in hokuyo_04lx_laser block, changed rpy = "0 0 0" to rpy = "M_PI 0 0" -- Note: M_PI is defined as 3.14159... pi
+
+Navigation based changes::
+
+The default segbot_navigation launchfile opens both kinect and hokuyo, since we use kinect to do people detection, we want it to work with just hokuyo. 
+	Changes: in $(find segbot_navigation) the navigation.launch file, changed mapfile to a custom map of the lab created using gmapping, changed launch to segbot_hokuyo.launch as default.
+
+My computer was a noob and couldn't handle updating local costmap at 5Hz so I had to reduce it to 2Hz. To be honest, I don't know what publish frequency is but I made it 2Hz as well.
+	Changes: in $(find segbot_navigation)/config/eband/local_costmap_params.yaml changed update_frequency and publish_frequency to 2.0
+
+Also we wanted to limit the max speed during navigation, as the lab the robot is tested in is not very large and has expensive obstacles.
+	Changes: in $(find segbot_navigation)/config/eband_planner_params.yaml, used
+	  max_vel_lin: 0.6
+	  max_vel_th: 0.35
+	  min_vel_lin: 0.4
+	  min_in_place_vel_th: 0.25
+
+Runtime::
+	The segbot and hokuyo require root access to launch.
+$sudo su
+$[root password]
+$source /opt/ros/hydro/setup.bash
+$roslaunch segbot_navigation navigation.launch
+
+Note: Sometimes the integrator reset by the segbot will fail, or the hokuyo will fail to launch, if you see the error messages corresponding to those two cases, simply Ctrl C and rerun the command, it should work on the second time. The error checksum mismatch is okay.
+
+Running this with the other three custom nodes will work to the effect of the demo.

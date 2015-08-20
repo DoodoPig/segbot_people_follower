@@ -1,0 +1,5 @@
+The navigation goal nodes are based on http://wiki.ros.org/navigation/Tutorials/SendingSimpleGoals
+
+The code is relatively easy to read, the basic idea is that the navigation nodes alternate between sending each goal sent by people_detection. This way, one can interrupt the other during a goal send to send a new goal, which would be hard to accomplish using just one node since I am not familiar with multithreaded processing or the interrupt code in the navigation node. They interrupt each other back and forth as long as people_detection keeps sending values of the place of the person relative to base_link, simulating real time following. When people_detection stops sending values (ex. no people, too much noise), the goal stops being interrupted and the robot goes to the place where it last saw a person. 
+
+We still want to implement roaming while it does not see any people, or at least periodic rotation, this will be coming soon.

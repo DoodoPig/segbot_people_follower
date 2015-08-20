@@ -1,0 +1,37 @@
+/*This is the documentation for the People detection using Kinect, supported under ROS Hydro and Ubuntu 12.04, Created and maintained by Luke Sun (PhuraXylox@gmail.com) and Yunfei Zhang*/
+
+1. Install ROS Hydro- full in Ubuntu 12.04
+	Follow steps outlined by http://wiki.ros.org/hydro/Installation/Ubuntu
+	Follow ROS tutorials to set up ROS_PACKAGE_PATH and  
+
+2. Install Openni Camera and Openni Launch
+	a) $sudo apt-get install ros-hydro-openni-camera
+	b) $sudo apt-get install ros-<rosdistro>-openni-launch
+	Documentation at: http://wiki.ros.org/openni_camera
+			  http://wiki.ros.org/openni_launch
+
+3. The people detection algorithm used is from pcl people namespace
+	Link to pcl tutorial: http://pointclouds.org/documentation/tutorials/ground_based_rgbd_people_detection.php
+	The people_detection package achieves the algorithm in ros using either a real Kinect launched by openni launch or a simulated kinect in Gazebo
+
+	The program now gets the Kinect frame from ROS instead of openni grabber, it subscribes to the topic published by openni_launch camera/depth_registered/points, see ROS tutorial for more information, i.e. ros::spinOnce/ros::spin.
+	The cloud_callback in the pcl code is replace by ROS callback, use pcl::fromROSMsg to convert PointCloud2 to PointT type.
+	The code is hardcoded to order the PointCloud2 data, thus, only useable with Microsoft Kinect at 480x640 resolution, other cameras are not tested and other resolutions will not work.
+	min_confidence, min_height, etc parameters are all default parameters, therefore need not be set, but set anyways for easy to access changing of parameters if needed.
+	The node publishes to a topic called /people, includes z(depth) and x coordinates as well as an indicator which is used by the dual-navigation-goal nodes (can add more info later) of the first person detected with respect to the Kinect camera.
+
+	The messages is only published if a set of requirements are met beforehand(at time of writing must see same person 3 times in a row, and does not publish if sees more than 1 person) to eliminate noise that may cause random navigation goals when the robot decides to move to the person.
+
+	The dual navigation_goals package subscribes to the /people topic to send goals to the navigation stack whenever it detects a person.
+
+	Built using rosbuild
+	Packages dependencies: 
+		roscpp, std_msgs, sensor_msgs, pcl_ros, pcl_conversions, pcl_msgs
+
+	CMakeLists notes:
+	target_link_libraries (ground_based_people_detector ${PCL_LIBRARIES} /usr/lib/libvtkFiltering.so) at the bottom of CMakeList to fix unusual link error
+
+	
+runtime: roslaunch openni_launch openni.launch
+	 rosrun people_detection ground_based_people_detector
+	

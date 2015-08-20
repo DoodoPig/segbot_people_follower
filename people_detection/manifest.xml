@@ -1,0 +1,20 @@
+<package>
+  <description brief="people_detection">
+
+     people_detection
+
+  </description>
+  <author>DoodoROS</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/people_detection</url>
+  <depend package="roscpp"/>
+  <depend package="std_msgs"/>
+  <depend package="sensor_msgs"/>
+  <depend package="pcl_ros"/>
+  <depend package="pcl_conversions"/>
+  <depend package="pcl_msgs"/>
+
+</package>
+
+
